@@ -3,6 +3,9 @@ let campaign = { status: 'idle', concurrency: 3, totalCalled: 0, totalFailed: 0,
 let queue = []
 let active = 0
 let timers = new Map()
+const rcEnabled = process.env.RC_ENABLED === 'true'
+let rcPlace
+try { rcPlace = require('./ringcentral').placeCallE164 } catch(e) { rcPlace = null }
 
 function normalizePhone(p) {
   if (!p) return null
@@ -56,6 +59,20 @@ function startNext() {
   active++
   next.status = 'dialing'
   campaign.totalCalled++
+  if (rcEnabled && rcPlace) {
+    rcPlace(next.phone).then(() => {
+      next.status = 'answered'
+      campaign.totalAnswered++
+      active--
+      startNext()
+    }).catch(() => {
+      next.status = 'failed'
+      campaign.totalFailed++
+      active--
+      startNext()
+    })
+    return
+  }
   const t = setTimeout(() => {
     const answered = Math.random() < 0.8
     if (answered) {
