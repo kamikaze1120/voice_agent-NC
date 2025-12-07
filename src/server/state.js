@@ -6,6 +6,7 @@ let timers = new Map()
 const rcEnabled = process.env.RC_ENABLED === 'true'
 let rcPlace
 try { rcPlace = require('./ringcentral').placeCallE164 } catch(e) { rcPlace = null }
+let message = { current: '', versions: [] }
 
 function normalizePhone(p) {
   if (!p) return null
@@ -39,7 +40,7 @@ function startCampaign(concurrency) {
   active = 0
   timers = new Map()
   pump()
-  return { status: campaign.status, queued: queue.length }
+  return { status: campaign.status, queued: queue.length, message }
 }
 
 function stopCampaign() {
@@ -98,9 +99,20 @@ function pump() {
 }
 
 function status() {
-  return { status: campaign.status, concurrency: campaign.concurrency, totals: { called: campaign.totalCalled, answered: campaign.totalAnswered, failed: campaign.totalFailed }, queued: queue.length, active }
+  return { status: campaign.status, concurrency: campaign.concurrency, totals: { called: campaign.totalCalled, answered: campaign.totalAnswered, failed: campaign.totalFailed }, queued: queue.length, active, message }
 }
 
 function getContacts() { return contacts }
 
-module.exports = { setContacts, startCampaign, stopCampaign, status, getContacts }
+function setMessage(script) {
+  const t = (script || '').trim()
+  if (!t) return { ok: false }
+  message.current = t
+  message.versions.unshift({ at: Date.now(), text: t })
+  if (message.versions.length > 10) message.versions = message.versions.slice(0, 10)
+  return { ok: true }
+}
+
+function getMessage() { return message }
+
+module.exports = { setContacts, startCampaign, stopCampaign, status, getContacts, setMessage, getMessage }
