@@ -2,12 +2,11 @@
   "name": "voice_agent",
   "version": "0.1.0",
   "private": true,
-  "main": "index.js",
   "scripts": {
     "start": "next start",
     "dev": "next dev",
     "build": "next build",
-    "server": "node index.js"
+    "server": "next start"
   },
   "dependencies": {
     "@ringcentral/sdk": "^5.0.6",

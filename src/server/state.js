@@ -6,7 +6,7 @@ let timers = new Map()
 const rcEnabled = process.env.RC_ENABLED === 'true'
 let rcPlace
 try { rcPlace = require('./ringcentral').placeCallE164 } catch(e) { rcPlace = null }
-let message = { current: '', versions: [] }
+let message = { current: '', voice: '', versions: [] }
 
 function normalizePhone(p) {
   if (!p) return null
@@ -104,10 +104,11 @@ function status() {
 
 function getContacts() { return contacts }
 
-function setMessage(script) {
+function setMessage(script, voice) {
   const t = (script || '').trim()
   if (!t) return { ok: false }
   message.current = t
+  if (typeof voice === 'string') message.voice = voice
   message.versions.unshift({ at: Date.now(), text: t })
   if (message.versions.length > 10) message.versions = message.versions.slice(0, 10)
   return { ok: true }

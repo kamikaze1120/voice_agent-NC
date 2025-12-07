@@ -9,6 +9,6 @@ export async function GET() {
 
 export async function POST(request) {
   const body = await request.json()
-  const r = setMessage(body?.text || '')
+  const r = setMessage(body?.text || '', body?.voice || '')
   return NextResponse.json({ ok: !!r.ok })
 }
