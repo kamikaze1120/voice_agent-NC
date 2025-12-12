@@ -45,4 +45,25 @@ async function placeCallE164(toNumber) {
   return res.json()
 }
 
-module.exports = { testAuth, placeCallE164 }
+// Experimental Call Control using Telephony Sessions API
+// Creates an outbound call and attempts to play audio from a public URL
+async function placeCallAndPlayE164(toNumber, audioUrl) {
+  const sdk = await authorize()
+  const platform = sdk.platform()
+  const create = await platform.post('/restapi/v1.0/account/~/telephony/sessions', {
+    direction: 'Outbound',
+    to: { phoneNumber: toNumber },
+    from: { phoneNumber: process.env.RC_FROM_NUMBER },
+  })
+  const session = await create.json()
+  const sessionId = session?.id
+  const partyId = session?.parties?.[0]?.id
+  if (!sessionId || !partyId) throw new Error('session/party missing')
+  // Attempt to play audio on the party
+  const play = await platform.post(`/restapi/v1.0/account/~/telephony/sessions/${sessionId}/parties/${partyId}/play`, {
+    audio: { mode: 'AudioFile', uri: audioUrl },
+  })
+  return play.json()
+}
+
+module.exports = { testAuth, placeCallE164, placeCallAndPlayE164 }

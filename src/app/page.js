@@ -105,6 +105,7 @@ export default function Page() {
           <div className="row">
             <input type="text" placeholder="Test phone" value={testPhone} onChange={e => setTestPhone(e.target.value)} />
             <button onClick={async () => { const r = await fetch('/api/call/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: testPhone }) }); const j = await r.json(); alert(j.ok ? 'Call triggered' : ('Error: ' + j.error)) }}>Place Test Call</button>
+            <button onClick={async () => { const r = await fetch('/api/call/play', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: testPhone, text: message, lang: 'en' }) }); const j = await r.json(); alert(j.ok ? 'Play call triggered' : ('Error: ' + j.error)) }}>Place Play Call</button>
           </div>
           <div className="row">
             <div id="stats">{stats && `Status: ${stats.status} | Concurrency: ${stats.concurrency} | Called: ${stats.totals.called} | Answered: ${stats.totals.answered} | Failed: ${stats.totals.failed} | Queued: ${stats.queued} | Active: ${stats.active}`}</div>
