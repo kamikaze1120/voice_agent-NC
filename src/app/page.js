@@ -11,6 +11,9 @@ export default function Page() {
   const [testPhone, setTestPhone] = useState('')
   const [voices, setVoices] = useState([])
   const [voiceName, setVoiceName] = useState('')
+  const [smsPhone, setSmsPhone] = useState('')
+  const [smsText, setSmsText] = useState('')
+  const [callLog, setCallLog] = useState([])
 
   const parseContacts = (text) => {
     const lines = text.split(/\n+/).map(x => x.trim()).filter(Boolean)
@@ -54,9 +57,15 @@ export default function Page() {
     const cj = await cr.json()
     setContacts(cj.items)
   }
+  async function refreshCallLog() {
+    const r = await fetch('/api/rc/call-log?perPage=20&type=Voice')
+    const j = await r.json()
+    setCallLog(j.items || [])
+  }
   useEffect(() => {
     const t = setInterval(refresh, 1000)
     refresh()
+    refreshCallLog()
     const loadVoices = () => {
       const v = window.speechSynthesis.getVoices()
       setVoices(v || [])
@@ -131,6 +140,26 @@ export default function Page() {
             <tbody>
               {contacts.map(c => (
                 <tr key={c.id}><td>{c.name}</td><td>{c.phone}</td><td><button onClick={() => markPress1(c.id)}>Mark Press 1</button></td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="card">
+          <div className="headline">SMS</div>
+          <div className="row">
+            <input type="text" placeholder="Phone" value={smsPhone} onChange={e => setSmsPhone(e.target.value)} />
+            <input type="text" placeholder="Message" value={smsText} onChange={e => setSmsText(e.target.value)} />
+            <button onClick={async () => { const r = await fetch('/api/rc/sms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: smsPhone, text: smsText }) }); const j = await r.json(); alert(j.ok ? 'SMS sent' : ('Error: ' + j.error)) }}>Send SMS</button>
+          </div>
+        </div>
+        <div className="card">
+          <div className="headline">Recent Calls</div>
+          <div className="row"><button onClick={refreshCallLog}>Refresh</button></div>
+          <table>
+            <thead><tr><th>From</th><th>To</th><th>Direction</th><th>Result</th><th>Start</th><th>Duration</th></tr></thead>
+            <tbody>
+              {callLog.map(c => (
+                <tr key={c.id}><td>{c.from?.phoneNumber || ''}</td><td>{c.to?.phoneNumber || ''}</td><td>{c.direction}</td><td>{c.result}</td><td>{c.startTime ? new Date(c.startTime).toLocaleString() : ''}</td><td>{typeof c.duration === 'number' ? `${c.duration}s` : ''}</td></tr>
               ))}
             </tbody>
           </table>

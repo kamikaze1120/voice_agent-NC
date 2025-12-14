@@ -66,4 +66,30 @@ async function placeCallAndPlayE164(toNumber, audioUrl) {
   return play.json()
 }
 
-module.exports = { testAuth, placeCallE164, placeCallAndPlayE164 }
+async function getCallLog(params = {}) {
+  const sdk = await authorize()
+  const platform = sdk.platform()
+  const query = {}
+  if (params.perPage) query.perPage = params.perPage
+  if (params.direction) query.direction = params.direction
+  if (params.type) query.type = params.type
+  if (params.dateFrom) query.dateFrom = params.dateFrom
+  if (params.dateTo) query.dateTo = params.dateTo
+  const res = await platform.get('/restapi/v1.0/account/~/call-log', query)
+  const json = await res.json()
+  return json.records || []
+}
+
+async function sendSms(toNumber, text) {
+  const sdk = await authorize()
+  const platform = sdk.platform()
+  const body = {
+    from: { phoneNumber: process.env.RC_FROM_NUMBER },
+    to: [{ phoneNumber: toNumber }],
+    text,
+  }
+  const res = await platform.post('/restapi/v1.0/account/~/extension/~/sms', body)
+  return res.json()
+}
+
+module.exports = { testAuth, placeCallE164, placeCallAndPlayE164, getCallLog, sendSms }
